@@ -1,0 +1,19 @@
+# Compiled executables
+*.out
+*.exe
+*.o
+
+# Mac system files
+.DS_Store
+
+# Build directories
+build/
+
+# VS Code settings (optional)
+.vscode/
+
+# CMake (for later)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
