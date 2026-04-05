@@ -3,6 +3,16 @@
 *.exe
 *.o
 
+# C++ outputs built next to sources in basics/
+basics/*
+!basics/*.cpp
+
+data-structures/*
+!data-structures/*.cpp
+
+tracking/*
+!tracking/*.cpp
+
 # Mac system files
 .DS_Store
 
