@@ -26,6 +26,8 @@ Introductory programs focused on core C++ concepts:
 Current programs:
 - hello.cpp – user input and output
 - calculator.cpp – basic arithmetic with error handling
+- even-odd.cpp - determining if user input is an even or odd integer
+- vector-average.cpp - finding average of an array of numbers using vectors
 
 ---
 
