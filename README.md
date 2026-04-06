@@ -34,6 +34,9 @@ Current programs:
 ### DataStructures/
 Programs focused on building fundamental data structures and algorithms.
 
+Current programs:
+- distance-two-points.cpp - outputs the distance between two (x,y) coordinates
+
 Planned:
 - Nearest point (brute force)
 - KD-Tree implementation
