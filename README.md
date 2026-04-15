@@ -36,10 +36,11 @@ Programs focused on building fundamental data structures and algorithms.
 
 Current programs:
 - distance-two-points.cpp - outputs the distance between two (x,y) coordinates
+- nearest-point.cpp - returns the nearest point in a collection of points to a queried point
+- kdtree.cpp - Implements a 2D KD-Tree to optimize nearest neighbor search using recursive spatial parititioning and pruning
 
 Planned:
-- Nearest point (brute force)
-- KD-Tree implementation
+- KD-Tree implementation (in progress)
 
 ---
 

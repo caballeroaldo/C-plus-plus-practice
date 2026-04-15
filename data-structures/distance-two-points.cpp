@@ -10,8 +10,6 @@ struct Point {
 
 // Helper functions for computing the distance between points
 double computeDistance(const Point& p1, const Point& p2) {
-    // TODO: Compute Distance here
-
 
     double dx = p2.x - p1.x;
     double dy = p2.y - p1.y;
