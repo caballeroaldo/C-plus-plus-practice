@@ -65,10 +65,10 @@ void printTree(Node* root, int depth = 0) {
     }
 
     for (int i = 0; i < depth; i++) {
-        cout << " ";
+        cout << "  ";
     }
 
-    cout << "(" << root->point.x << " , " << root->point.y << ")" << "axis=" << root->axis << "\n";
+    cout << "(" << root->point.x << " , " << root->point.y << ") " << "axis=" << root->axis << "\n";
 
     printTree(root->left, depth + 1);
     printTree(root->right, depth + 1);
@@ -116,6 +116,7 @@ Point nearestNeighborHelper(Node* root, const Point& query, Point best, double& 
 
 Point nearestNeighbor(Node* root, const Point& query) {
     if (root == nullptr) {
+        cout << "Error: KD-Tree is empty\n";
         return {0,0};
     }
 
@@ -149,11 +150,13 @@ int main() {
     printTree(root);
 
     Point query;
-    cout << "\nEnter query point (x,y): ";
+    cout << "\nEnter query point (x y): ";
     cin >> query.x >> query.y;
 
     Point closest = nearestNeighbor(root, query);
     cout << "Closest point: (" << closest.x << ", " << closest.y << ")\n";
+    double distanceToPoint = sqrt(squaredDistance(query, closest));
+    cout << "Distance: " << distanceToPoint << "\n";
 
     deleteTree(root);
 

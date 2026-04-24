@@ -39,17 +39,15 @@ Current programs:
 - nearest-point.cpp - returns the nearest point in a collection of points to a queried point
 - kdtree.cpp - Implements a 2D KD-Tree to optimize nearest neighbor search using recursive spatial parititioning and pruning
 
-Planned:
-- KD-Tree implementation (in progress)
-
 ---
 
 ### Tracking/
 Programs related to object tracking and perception concepts.
+- object-tracker.cpp - Implements a foundational object tracking system that associates detections across frames using spatial proximity, forming a core component of real-time perception pipelines.
 
 Planned:
 - Bounding box utilities (IoU)
-- Simple object tracker
+
 
 ---
 
