@@ -25,7 +25,9 @@ int main() {
     // Initialize Tracks
     vector<Track> tracks;
     int nextTrackId = 0;
-    const double distanceThreshold = 1000;
+
+    const double distanceThreshold = 1000; // Squared Distance not 1000 pixels
+    const int maxMissedFrames = 3;
 
     // Read the first frame
     int numDetections;
@@ -42,7 +44,7 @@ int main() {
 
     // Initialize frame1 into track
     for(const Point& p: frame1) {
-        tracks.push_back({nextTrackId + 1, p, 0});
+        tracks.push_back({nextTrackId++, p, 0});
     }
 
     // loop through detections to get additional frames
@@ -97,8 +99,22 @@ int main() {
         for (int i = 0; i < tracks.size(); i++) {
             if (!trackUsed[i]) {
                 tracks[i].missedFrames++;
+            } else {
+                tracks[i].missedFrames = 0;
             }
         }
+
+        // delete stale tracks 
+        // Checking it by looping backwards
+        // Side note: Added static_cast to avoid unsigned type bug
+        for (int i = static_cast<int>(tracks.size()) - 1; i >= 0; i--) {
+            if (tracks[i].missedFrames > maxMissedFrames) {
+                cout << "Deleting track " << tracks[i].id << " due to inactivity.\n"; 
+                tracks.erase(tracks.begin() + i);
+            }
+        }
+
+
         cout << "\nCurrent tracks:\n";
         for (const Track& t : tracks) {
             cout << "Track " << t.id << " -> ("
@@ -107,8 +123,6 @@ int main() {
         }
     }
 
-
- 
 
     return 0;
 }
