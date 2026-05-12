@@ -12,6 +12,7 @@ struct Point {
 struct Track {
     int id;
     Point position;
+    int missedFrames;
 };
 
 double squaredDistance(const Point& a, const Point& b) {
@@ -21,72 +22,93 @@ double squaredDistance(const Point& a, const Point& b) {
 }
 
 int main() {    
-    // Frame 1
-    vector<Point> frame1 = {
-        {100, 200},
-        {300, 400},
-        {498, 502}
-    };
-
-    // Frame 2
-    vector<Point> frame2 = {
-        {105, 205},
-        {298, 398},
-        {500, 500}
-    };
     // Initialize Tracks
     vector<Track> tracks;
+    int nextTrackId = 0;
+    const double distanceThreshold = 1000;
 
-    for (int i = 0; i < frame1.size(); i++) {
-        tracks.push_back({i, frame1[i]});
+    // Read the first frame
+    int numDetections;
+    cout << "How many detections in frame 1? ";
+    cin >> numDetections;
+
+    vector<Point> frame1;
+    for (int i = 0; i < numDetections; i++) {
+            Point p;
+            cout << "Enter point " << i + 1 << " (x y): ";
+            cin >> p.x >> p.y;
+            frame1.push_back(p);
     }
 
-    // Match frames using tracks 
-    cout << "Matching frame 2 to frame 1...\n";
+    // Initialize frame1 into track
+    for(const Point& p: frame1) {
+        tracks.push_back({nextTrackId + 1, p, 0});
+    }
 
-    vector<bool> trackUsed(tracks.size(), false);
-    double distanceThreshold = 1000;
-    int nextTrackId = tracks.size();
+    // loop through detections to get additional frames
+    while(true) {
+        cout << "How many detections in the next frame? ";
+        cin >> numDetections;
 
-    for (const Point& p : frame2) {
-        double minDist = numeric_limits<double>::max();
-        int bestTrackIndex = -1;
+        if (numDetections == 0) {
+            cout << "No more frames, Exiting. \n";
+            break;
+        }
 
-        for(int j = 0; j < tracks.size(); j++) {
-            if (trackUsed[j]) continue;
+        vector<Point> currentFrame;
+        for (int i = 0; i < numDetections; i++) {
+            Point p;
+            cout << "Enter point " << i + 1 << " (x y): ";
+            cin >> p.x >> p.y;
+            currentFrame.push_back(p);
+        }
 
-            double dist = squaredDistance(p, tracks[j].position);
+        vector<bool> trackUsed(tracks.size(), false);
 
-            if (bestTrackIndex == -1 || dist < minDist) {
-                minDist = dist;
-                bestTrackIndex = j;
+        // match detections to tracks: greedy implementation
+        for (const Point& p : currentFrame) {
+            double minDist = numeric_limits<double>::max();
+            int bestTrackIndex = -1;
+            for (int j = 0; j < tracks.size(); j++) {
+                if (trackUsed[j]) continue;
+                double dist = squaredDistance(p, tracks[j].position);
+                if (dist < minDist) {
+                    minDist = dist;
+                    bestTrackIndex = j;
+                }
+            }
+            if (bestTrackIndex != -1 && minDist < distanceThreshold) {
+                // Match to existing track
+                tracks[bestTrackIndex].position = p;
+                tracks[bestTrackIndex].missedFrames = 0;
+                trackUsed[bestTrackIndex] = true;
+                cout << "Matched point (" << p.x << ", " << p.y
+                     << ") to Track " << tracks[bestTrackIndex].id << "\n";
+            } else {
+                // Create a new track
+                tracks.push_back({nextTrackId++, p, 0});
+                trackUsed.push_back(true);
+                cout << "Created new Track " << nextTrackId - 1
+                     << " for point (" << p.x << ", " << p.y << ")\n";
             }
         }
 
-        // Update track position and accounts for the threshold for considering it as another object
-        if (bestTrackIndex != -1 && minDist < distanceThreshold) {
-            tracks[bestTrackIndex].position = p;
-            trackUsed[bestTrackIndex] = true;
-
-            cout << "Matched point (" << p.x << ", " << p.y << ") to Track " << tracks[bestTrackIndex].id << "\n"; 
-        } else {
-            // No good match, make a new track
-            Track newTrack;
-            newTrack.id = nextTrackId++;
-            newTrack.position = p;
-
-            tracks.push_back(newTrack);
-            trackUsed.push_back(true);
-
-            cout << "Created new Track " << newTrack.id << " for point (" << p.x << ", " << p.y << ")\n";
+        // update missedFrames
+        for (int i = 0; i < tracks.size(); i++) {
+            if (!trackUsed[i]) {
+                tracks[i].missedFrames++;
+            }
+        }
+        cout << "\nCurrent tracks:\n";
+        for (const Track& t : tracks) {
+            cout << "Track " << t.id << " -> ("
+                 << t.position.x << ", " << t.position.y
+                 << "), missedFrames=" << t.missedFrames << "\n";
         }
     }
 
-    cout << "Total tracks: " << tracks.size() << "\n";
-    cout << "\nFinal tracked Positions:\n";
-    for (const Track& t: tracks) {
-        cout << "Track " << t.id << " -> (" << t.position.x << ", " << t.position.y << ")\n";
-    }
+
+ 
 
     return 0;
 }
