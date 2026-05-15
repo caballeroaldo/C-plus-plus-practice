@@ -27,6 +27,22 @@ double squaredDistance(const Point& a, const Point& b) {
     return dx * dx + dy * dy;
 }
 
+void printTrackHistory(const Track& t) {
+    cout << "Track " << t.id << " -> ("
+         << t.position.x << ", " << t.position.y
+         << "), missedFrames=" << t.missedFrames << "\n";
+
+    cout << "  Trajectory:\n";
+
+    for (const Observation& obs : t.history) {
+        cout << "    Frame " << obs.frameNumber << ": ("
+             << obs.position.x << ", "
+             << obs.position.y << ")\n";
+    }
+
+    cout << "\n";
+}
+
 int main() {    
     // Initialize Tracks
     vector<Track> tracks;
@@ -52,7 +68,12 @@ int main() {
 
     // Initialize frame1 into track
     for(const Point& p: frame1) {
-        tracks.push_back({nextTrackId++, p, 0});
+        Track t;
+        t.id = nextTrackId++;
+        t.position = p;
+        t.missedFrames = 0;
+        t.history.push_back({1, p});
+        tracks.push_back(t);
     }
 
     frameNumber++;
@@ -132,20 +153,10 @@ int main() {
 
         cout << "\nCurrent tracks:\n";
         for (const Track& t : tracks) {
-            cout << "Track " << t.id << " -> ("
-                 << t.position.x << ", " << t.position.y
-                 << "), missedFrames=" << t.missedFrames << "\n";
-
-            cout << "  Observation:\n";
-            for (const Observation& obs: t.history) {
-                cout << "    Frame " << obs.frameNumber << ": (" 
-                    << obs.position.x << ", " 
-                    << obs.position.y << ")\n";
-            }
-            cout << "\n";
-
-            frameNumber++;
+            printTrackHistory(t);
         }
+
+        frameNumber++;
     }
 
 
