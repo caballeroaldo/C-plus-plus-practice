@@ -9,11 +9,16 @@ struct Point {
     double y;
 };
 
+struct Observation {
+    int frameNumber;
+    Point position;
+};
+
 struct Track {
     int id;
     Point position;
     int missedFrames;
-    vector<Point> history;
+    vector<Observation> history;
 };
 
 double squaredDistance(const Point& a, const Point& b) {
@@ -29,6 +34,8 @@ int main() {
 
     const double distanceThreshold = 1000; // Squared Distance not 1000 pixels
     const int maxMissedFrames = 3;
+
+    int frameNumber = 1;
 
     // Read the first frame
     int numDetections;
@@ -48,9 +55,11 @@ int main() {
         tracks.push_back({nextTrackId++, p, 0});
     }
 
+    frameNumber++;
+
     // loop through detections to get additional frames
     while(true) {
-        cout << "How many detections in the next frame? ";
+        cout << "How many detections in frame " << frameNumber << "? ";
         cin >> numDetections;
 
         if (numDetections == 0) {
@@ -84,22 +93,20 @@ int main() {
                 // Match to existing track
                 tracks[bestTrackIndex].position = p;
                 tracks[bestTrackIndex].missedFrames = 0;
-                tracks[bestTrackIndex].history.push_back(p);
+                tracks[bestTrackIndex].history.push_back({frameNumber, p});
                 trackUsed[bestTrackIndex] = true;
-                cout << "Matched point (" << p.x << ", " << p.y
-                     << ") to Track " << tracks[bestTrackIndex].id << "\n";
+                cout << "Matched point (" << p.x << ", " << p.y << ") to Track " << tracks[bestTrackIndex].id << "\n";
             } else {
                 // Create a new track
                 Track newTrack;
                 newTrack.id = nextTrackId++;
                 newTrack.position = p;
                 newTrack.missedFrames = 0;
-                newTrack.history.push_back(p);
+                newTrack.history.push_back({frameNumber, p});
 
                 tracks.push_back(newTrack);
                 trackUsed.push_back(true);
-                cout << "Created new Track " << newTrack.id
-                     << " for point (" << p.x << ", " << p.y << ")\n";
+                cout << "Created new Track " << newTrack.id << " for point (" << p.x << ", " << p.y << ")\n";
             }
         }
 
@@ -129,14 +136,15 @@ int main() {
                  << t.position.x << ", " << t.position.y
                  << "), missedFrames=" << t.missedFrames << "\n";
 
-            cout << "Path: ";
-            for (int i = 0; i < t.history.size(); i++) {
-                cout << "(" << t.history[i].x << ", " << t.history[i].y << ")";
-                if (i < t.history.size() - 1) {
-                    cout << " -> ";
-                }
+            cout << "  Observation:\n";
+            for (const Observation& obs: t.history) {
+                cout << "    Frame " << obs.frameNumber << ": (" 
+                    << obs.position.x << ", " 
+                    << obs.position.y << ")\n";
             }
             cout << "\n";
+
+            frameNumber++;
         }
     }
 
