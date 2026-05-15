@@ -13,6 +13,7 @@ struct Track {
     int id;
     Point position;
     int missedFrames;
+    vector<Point> history;
 };
 
 double squaredDistance(const Point& a, const Point& b) {
@@ -83,14 +84,21 @@ int main() {
                 // Match to existing track
                 tracks[bestTrackIndex].position = p;
                 tracks[bestTrackIndex].missedFrames = 0;
+                tracks[bestTrackIndex].history.push_back(p);
                 trackUsed[bestTrackIndex] = true;
                 cout << "Matched point (" << p.x << ", " << p.y
                      << ") to Track " << tracks[bestTrackIndex].id << "\n";
             } else {
                 // Create a new track
-                tracks.push_back({nextTrackId++, p, 0});
+                Track newTrack;
+                newTrack.id = nextTrackId++;
+                newTrack.position = p;
+                newTrack.missedFrames = 0;
+                newTrack.history.push_back(p);
+
+                tracks.push_back(newTrack);
                 trackUsed.push_back(true);
-                cout << "Created new Track " << nextTrackId - 1
+                cout << "Created new Track " << newTrack.id
                      << " for point (" << p.x << ", " << p.y << ")\n";
             }
         }
@@ -120,6 +128,15 @@ int main() {
             cout << "Track " << t.id << " -> ("
                  << t.position.x << ", " << t.position.y
                  << "), missedFrames=" << t.missedFrames << "\n";
+
+            cout << "Path: ";
+            for (int i = 0; i < t.history.size(); i++) {
+                cout << "(" << t.history[i].x << ", " << t.history[i].y << ")";
+                if (i < t.history.size() - 1) {
+                    cout << " -> ";
+                }
+            }
+            cout << "\n";
         }
     }
 
