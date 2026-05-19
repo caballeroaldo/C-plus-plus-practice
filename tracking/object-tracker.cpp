@@ -21,10 +21,121 @@ struct Track {
     vector<Observation> history;
 };
 
+struct KDItem {
+    Point point;
+    int trackIndex;
+};
+
+struct Node {
+    KDItem item;
+    int axis;
+    Node* left;
+    Node* right;
+
+    Node(const KDItem& it, int a)
+        : item(it), axis(a), left(nullptr), right(nullptr) {}
+};
+
 double squaredDistance(const Point& a, const Point& b) {
     double dx = a.x - b.x;
     double dy = a.y - b.y;
     return dx * dx + dy * dy;
+}
+
+bool compareByAxis(const KDItem& a, const KDItem& b, int axis) {
+    if (axis == 0) {
+        return a.point.x < b.point.x;
+    }
+
+    return a.point.y < b.point.y;
+}
+
+Node* buildKDTree(vector<KDItem> items, int depth = 0) {
+    if (items.empty()) {
+        return nullptr;
+    }
+
+    int axis = depth % 2;
+
+    sort(items.begin(), items.end(),
+        [axis](const KDItem& a, const KDItem& b) {
+            return compareByAxis(a,b,axis);
+        });
+    
+    int mid = static_cast<int>(items.size()) / 2;
+
+    KDItem medianItem = items[mid];
+
+    Node* root = new Node(medianItem, axis);
+
+    vector<KDItem> leftItems(items.begin(), items.begin() + mid);
+    vector<KDItem> rightItems(items.begin() + mid + 1, items.end());
+
+    root->left = buildKDTree(leftItems, depth + 1);
+    root->right = buildKDTree(rightItems, depth + 1);
+
+    return root;
+}
+
+KDItem nearestNeighborHelper(Node* root, const Point& query, KDItem best, double& bestDist) {
+    if (root == nullptr) {
+        return best;
+    }
+
+    double currentDist = squaredDistance(query, root->item.point);
+
+    if (currentDist < bestDist) {
+        bestDist = currentDist;
+        best = root->item;
+    }
+
+    int axis = root->axis;
+    Node* first = nullptr;
+    Node* second = nullptr;
+
+    if((axis == 0 && query.x < root->item.point.x) ||
+        (axis == 1 && query.y < root->item.point.y)) {
+            first = root->left;
+            second = root->right;
+    } else {
+        first = root->right;
+        second = root->left;
+    }
+
+    best = nearestNeighborHelper(first, query, best, bestDist);
+
+    double axisDiff = 0;
+    if (axis == 0) {
+        axisDiff = query.x - root->item.point.x;
+    } else {
+        axisDiff = query.y - root->item.point.y;
+    }
+
+    if (axisDiff * axisDiff < bestDist) {
+        best = nearestNeighborHelper(second, query, best, bestDist);
+    }
+
+    return best;
+}
+
+KDItem nearestNeighbor(Node* root, const Point& query) {
+    if (root == nullptr) {
+        return {{0,0}, -1};
+    }
+
+    KDItem best = root->item;
+    double bestDist = squaredDistance(query, root->item.point);
+    return nearestNeighborHelper(root, query, best, bestDist);
+}
+
+void deleteTree(Node* root) {
+    if (root == nullptr) {
+        return;
+    }
+
+    deleteTree(root->left);
+    deleteTree(root->right);
+    delete root;
 }
 
 void printTrackHistory(const Track& t) {
@@ -72,7 +183,7 @@ int main() {
         t.id = nextTrackId++;
         t.position = p;
         t.missedFrames = 0;
-        t.history.push_back({1, p});
+        t.history.push_back({frameNumber, p});
         tracks.push_back(t);
     }
 
@@ -96,21 +207,29 @@ int main() {
             currentFrame.push_back(p);
         }
 
+        vector<KDItem> items;
+        for(int i = 0; i < static_cast<int>(tracks.size()); i++) {
+            items.push_back({tracks[i].position, i});
+        }
+        
+        Node* root = buildKDTree(items);
+
         vector<bool> trackUsed(tracks.size(), false);
 
         // match detections to tracks: greedy implementation
         for (const Point& p : currentFrame) {
             double minDist = numeric_limits<double>::max();
             int bestTrackIndex = -1;
-            for (int j = 0; j < tracks.size(); j++) {
-                if (trackUsed[j]) continue;
-                double dist = squaredDistance(p, tracks[j].position);
-                if (dist < minDist) {
-                    minDist = dist;
-                    bestTrackIndex = j;
+            
+            
+            if (root != nullptr && !tracks.empty()) {
+                KDItem nearest = nearestNeighbor(root, p);
+                bestTrackIndex = nearest.trackIndex;
+                if (bestTrackIndex != -1) {
+                    minDist = squaredDistance(p, tracks[bestTrackIndex].position);
                 }
             }
-            if (bestTrackIndex != -1 && minDist < distanceThreshold) {
+            if (bestTrackIndex != -1 && !trackUsed[bestTrackIndex] && minDist < distanceThreshold) {
                 // Match to existing track
                 tracks[bestTrackIndex].position = p;
                 tracks[bestTrackIndex].missedFrames = 0;
